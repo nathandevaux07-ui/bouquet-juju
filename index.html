@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bouquet3d.html — Pour Jules ♥</title>
+    <!-- Tailwind CSS & Police Monospace -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            min-height: 100dvh;
+            background-color: #07080c;
+            color: #e6edf3;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .terminal-shell {
+            background: radial-gradient(circle at 50% 40%, #151923 0%, #0b0d13 68%, #07080c 100%);
+            box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.96),
+                        0 0 65px rgba(255, 77, 166, 0.09),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+        }
+
+        #bouquetCanvas {
+            cursor: grab;
+            touch-action: none;
+        }
+        #bouquetCanvas:active {
+            cursor: grabbing;
+        }
+
+        .love-banner {
+            bottom: max(26px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+        }
+
+        .love-text {
+            font-size: clamp(0.76rem, 3.2vw, 0.96rem);
+            line-height: 1.45;
+            max-width: min(90vw, 680px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-screen flex items-center justify-center p-1.5 sm:p-4">
+
+    <!-- Fenêtre Terminal macOS/Linux -->
+    <main class="terminal-shell w-full h-full max-w-[1360px] max-h-[calc(100dvh-12px)] sm:max-h-[94dvh] rounded-2xl overflow-hidden flex flex-col">
+        
+        <!-- Barre supérieure minimaliste -->
+        <header class="bg-[#12161f]/95 border-b border-white/10 px-3.5 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center space-x-2 min-w-0">
+                <span class="w-3 h-3 rounded-full bg-[#ff5f56] inline-block shrink-0"></span>
+                <span class="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block shrink-0"></span>
+                <span class="w-3 h-3 rounded-full bg-[#27c93f] inline-block shrink-0"></span>
+                <span class="ml-2 sm:ml-3 text-xs text-gray-300 font-medium tracking-tight truncate">
+                    bouquet3d.html <span class="text-gray-500 hidden sm:inline">— 3D Floral Point-Cloud Engine</span>
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs shrink-0">
+                <button id="viewCodeBtn" class="px-3 py-1.5 rounded-lg bg-[#ff4da6]/15 hover:bg-[#ff4da6]/25 border border-[#ff4da6]/40 text-[#ff8ac4] font-medium transition">
+                    &lt;/&gt; <span class="hidden sm:inline">Code source</span>
+                </button>
+                <button id="downloadHtmlBtn" class="px-3 py-1.5 rounded-lg bg-[#2ce66b]/15 hover:bg-[#2ce66b]/25 border border-[#2ce66b]/40 text-[#7bed9f] font-medium transition">
+                    ⬇ <span class="hidden sm:inline">Télécharger .html</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Zone Canvas 3D + Message personnalisé -->
+        <div id="canvasContainer" class="relative flex-1 w-full h-full flex flex-col items-center justify-between overflow-hidden">
+            <canvas id="bouquetCanvas" class="w-full h-full block"></canvas>
+
+            <!-- Indication interactive discrète -->
+            <div class="absolute top-3 right-4 text-[11px] text-gray-500/75 pointer-events-none hidden sm:block">
+                Glisser pour orienter • Molette pour zoomer
+            </div>
+
+            <!-- Message exact demandé, remonté au-dessus de la zone de sécurité mobile -->
+            <div class="love-banner absolute left-0 right-0 flex items-center justify-center px-3 pointer-events-none z-10">
+                <p class="love-text text-center font-medium tracking-wide text-[#ffd6e8] drop-shadow-[0_0_14px_rgba(255,110,180,0.85)] bg-[#07080c]/82 backdrop-blur-[4px] px-4 sm:px-5 py-2 rounded-2xl sm:rounded-full border border-white/15">
+                    même dans ta langue informatique, je saurai te dire je t'aime jules
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modale Code Source pour Jules -->
+    <div id="codeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 z-50">
+        <div class="bg-[#0d1117] border border-white/15 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-4 py-3 bg-[#161b22] border-b border-white/10 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-[#2ce66b] text-sm">●</span>
+                    <h2 class="text-xs sm:text-sm font-semibold text-gray-200 truncate">bouquet3d.html — Moteur Botanique 3D &amp; Projection Perspective</h2>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="copyCodeBtn" class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-gray-200 transition">
+                        Copier
+                    </button>
+                    <button id="closeModalBtn" class="px-3 py-1 rounded-lg bg-[#ff5f56]/20 hover:bg-[#ff5f56]/30 text-xs text-[#ff5f56] transition">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 overflow-auto text-[11px] sm:text-xs leading-relaxed text-gray-300 select-text font-mono">
+                <div class="mb-3 p-2.5 rounded-lg bg-[#ff4da6]/10 border border-[#ff4da6]/25 text-[#ff8ac4]">
+                    // Codé spécialement pour toi Jules : 9 fleurs 3D inclinées face caméra sculptées point par point ♥
+                </div>
+                <pre id="sourceCodeDisplay" class="whitespace-pre overflow-x-auto"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de confirmation -->
+    <div id="toastMsg" class="fixed bottom-5 right-5 bg-[#161b22] border border-[#2ce66b]/50 text-[#7bed9f] px-4 py-2 rounded-xl text-xs shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        Téléchargé !
+    </div>
+
+    <script>
+        /**
+         * Moteur 3D Point-Cloud Botanique Haute Définition
+         * Inclinaison prononcée vers l'avant (vue dessus-face) pour admirer chaque corolle
+         * et fleur centrale en grand lys rouge impérial étoilé à 6 pétales effilés.
+         */
+        const canvas = document.getElementById('bouquetCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        // Palette haute saturation & contraste sur fond noir profond (#07080c)
+        const COLORS = {
+            LILY_DEEP:     [165,  12,  36],
+            LILY_MAIN:     [255,  38,  72],
+            LILY_CORAL:    [255, 118, 128],
+            LILY_EDGE:     [255, 196, 204],
+
+            GOLD_DEEP:     [215, 115,   0],
+            GOLD_MAIN:     [255, 214,  10],
+            GOLD_EDGE:     [255, 248, 165],
+            SUN_CORE:      [110,  42,  14],
+
+            PINK_DEEP:     [185,  28, 108],
+            PINK_MAIN:     [255,  77, 166],
+            PINK_EDGE:     [255, 198, 228],
+
+            LAV_DEEP:      [118,  52, 215],
+            LAV_MAIN:      [181, 101, 255],
+            LAV_EDGE:      [234, 206, 255],
+
+            WHITE_SHADOW:  [195, 212, 238],
+            WHITE_PURE:    [255, 255, 255],
+            CORAL_MAIN:    [255, 108,  88],
+            CORAL_EDGE:    [255, 205, 190],
+
+            LEAF_DARK:     [  0, 132,  65],
+            LEAF_MAIN:     [ 44, 232, 108],
+            LEAF_VEIN:     [170, 255, 198],
+
+            WRAP_DARK:     [185,  80, 126],
+            WRAP_MAIN:     [255, 136, 182],
+            WRAP_LIGHT:    [255, 226, 238],
+            RIBBON_MAIN:   [255,  64, 145]
+        };
+
+        function lerpRGB(c1, c2, t) {
+            const k = Math.max(0, Math.min(1, t));
+            return [
+                Math.round(c1[0] + (c2[0] - c1[0]) * k),
+                Math.round(c1[1] + (c2[1] - c1[1]) * k),
+                Math.round(c1[2] + (c2[2] - c1[2]) * k)
+            ];
+        }
+
+        function grad3(c1, c2, c3, t) {
+            return t < 0.5 ? lerpRGB(c1, c2, t * 2) : lerpRGB(c2, c3, (t - 0.5) * 2);
+        }
+
+        /**
+         * Transformation locale (position + orientation 3D de chaque fleur)
+         */
+        function makeTransform(cx, cy, cz, rx, rz) {
+            const cosX = Math.cos(rx), sinX = Math.sin(rx);
+            const cosZ = Math.cos(rz), sinZ = Math.sin(rz);
+            return (lx, ly, lz, nx, ny, nz) => {
+                const x1 = lx * cosZ - ly * sinZ;
+                const y1 = lx * sinZ + ly * cosZ;
+                const y2 = y1 * cosX - lz * sinX;
+                const z2 = y1 * sinX + lz * cosX;
+
+                const nx1 = nx * cosZ - ny * sinZ;
+                const ny1 = nx * sinZ + ny * cosZ;
+                const ny2 = ny1 * cosX - nz * sinX;
+                const nz2 = ny1 * sinX + nz * cosX;
+
+                return { x: cx + x1, y: cy + y2, z: cz + z2, nx: nx1, ny: ny2, nz: nz2 };
+            };
+        }
+
+        /**
+         * 1. GRAND LYS IMPÉRIAL ROUGE ÉCARLATE & CORAIL (Fleur centrale étoilée à 6 pétales effilés)
+         */
+        function addImperialRedLily(pts, cx, cy, cz, radius, rx, rz) {
+            const toWorld = makeTransform(cx, cy, cz, rx, rz);
+
+            // Cœur lumineux doré & 6 longues étamines arquées avec anthères brillantes
+            for (let i = 0; i < 42; i++) {
+                const a = i * 2.39996;
+                const r = radius * 0.11 * Math.sqrt(i / 42);
+                const p = toWorld(r * Math.cos(a), 0.05, r * Math.sin(a), 0, 1, 0.2);
+                pts.push({ ...p, rgb: COLORS.GOLD_MAIN, size: 1.35, glyph: '•', glow: true });
+            }
+
+            const numStamens = 6;
+            for (let s = 0; s < numStamens; s++) {
+                const sa = (s / numStamens) * Math.PI * 2 + 0.52;
+                const sLen = radius * 0.52;
+                for (let k = 0; k <= 18; k++) {
+                    const tk = k / 18;
+                    const r = tk * sLen * 0.58;
+                    const ly = Math.sin(tk * Math.PI * 0.68) * (radius * 0.54);
+                    const p = toWorld(r * Math.cos(sa), ly, r * Math.sin(sa), Math.cos(sa) * 0.4, 0.85, Math.sin(sa) * 0.4);
+                    pts.push({
+                        ...p,
+                        rgb: lerpRGB(COLORS.LEAF_VEIN, COLORS.GOLD_EDGE, tk),
+                        size: k >= 16 ? 1.85 : 1.0,
+                        glyph: k >= 16 ? '●' : '·',
+                        glow: k >= 15
+                    });
+                }
+            }
+
+            // 6 grands pétales étoilés effilés, courbés vers l'extérieur et nervurés (3 internes + 3 externes)
+            const petals = 6;
+            for (let k = 0; k < petals; k++) {
+                const baseAngle = (k / petals) * Math.PI * 2;
+                const isInner = k % 2 === 0;
+                const pLen = radius * (isInner ? 1.14 : 1.06);
+                const pHalfW = radius * (isInner ? 0.25 : 0.22);
+
+                for (let u = 0; u <= 28; u++) {
+                    const tu = u / 28;
+                    // Galbe en lance pointue (fuselé à la base, large au tiers, pointe fine au bout)
+                    const widthProfile = Math.sin(Math.pow(tu, 0.62) * Math.PI) * (1 - 0.18 * Math.pow(tu, 2));
+                    // Courbure élégante de trompette ouverte puis recourbée vers l'extérieur
+                    const openOut = Math.pow(tu, 0.85) * pLen;
+                    const archY = Math.sin(tu * Math.PI * 0.72) * (radius * 0.44) - Math.pow(tu, 2.5) * (radius * 0.24) + (isInner ? 0.04 : 0.0);
+
+                    for (let v = -9; v <= 9; v++) {
+                        const tv = v / 9;
+                        const isEdge = (Math.abs(v) === 9 || u === 28);
+                        const isCenterVein = (v === 0 && u % 2 === 0);
+                        const isSpot = (!isEdge && !isCenterVein && tu > 0.18 && tu < 0.58 && (u * 7 + Math.abs(v) * 13) % 19 === 0);
+                        if (!isEdge && !isCenterVein && !isSpot && (u % 2 !== 0 || v % 2 !== 0)) continue;
+
+                        const side = tv * pHalfW * widthProfile;
+                        // Légère gouttière centrale sur chaque pétale
+                        const creaseY = Math.pow(Math.abs(tv), 1.6) * 0.055 * radius;
+
+                        const lx = openOut * Math.cos(baseAngle) - side * Math.sin(baseAngle);
+                        const lz = openOut * Math.sin(baseAngle) + side * Math.cos(baseAngle);
+                        const ly = archY + creaseY;
+
+                        let rgb;
+                        if (isEdge) {
+                            rgb = COLORS.LILY_EDGE;
+                        } else if (isCenterVein) {
+                            rgb = lerpRGB(COLORS.GOLD_MAIN, COLORS.LILY_CORAL, tu);
+                        } else if (isSpot) {
+                            rgb = COLORS.LILY_DEEP;
+                        } else {
+                            rgb = grad3(COLORS.LILY_DEEP, COLORS.LILY_MAIN, COLORS.LILY_CORAL, tu);
+                        }
+
+                        const p = toWorld(lx, ly, lz, Math.cos(baseAngle) * 0.45, 0.85, Math.sin(baseAngle) * 0.45);
+                        pts.push({
+                            ...p,
+                            rgb,
+                            size: isEdge ? 1.55 : (isCenterVein ? 1.25 : 1.05),
+                            glyph: isEdge ? '•' : '·',
+                            glow: isEdge || isCenterVein
+                        });
+                    }
+                }
+            }
+        }
+
+        /**
+         * 2. TOURNESOL JAUNE DORÉ & AMBRE : Cœur brun-orangé texturé + couronne de pétales rayonnants
+         */
+        function addGoldenSunflower(pts, cx, cy, cz, radius, rx, rz) {
+            const toWorld = makeTransform(cx, cy, cz, rx, rz);
+
+            // Disque central brun-orangé en spirale de Fibonacci
+            for (let i = 0; i < 175; i++) {
+                const t = i / 175;
+                const a = i * 2.39996;
+                const r = radius * 0.31 * Math.sqrt(t);
+                const dome = Math.cos(t * Math.PI * 0.5) * 0.09;
+                const rgb = lerpRGB(COLORS.SUN_CORE, COLORS.GOLD_DEEP, t * 0.9);
+                const p = toWorld(r * Math.cos(a), dome, r * Math.sin(a), 0, 1, 0.2);
+                pts.push({ ...p, rgb, size: 1.28, glyph: '•', glow: false });
+            }
+
+            // 16 pétales rayonnants bien espacés autour du cœur
+            const numPetals = 16;
+            for (let k = 0; k < numPetals; k++) {
+                const baseAngle = (k / numPetals) * Math.PI * 2;
+                const isBackRow = k % 2 === 1;
+                const pLen = radius * (isBackRow ? 0.96 : 1.05);
+                const pHalfW = radius * 0.15;
+
+                for (let u = 0; u <= 22; u++) {
+                    const tu = u / 22;
+                    const widthFactor = Math.sin(Math.pow(tu, 0.68) * Math.PI);
+                    const archY = Math.sin(tu * Math.PI * 0.72) * 0.12 - (isBackRow ? 0.04 : 0);
+
+                    for (let v = -6; v <= 6; v++) {
+                        const tv = v / 6;
+                        const isEdge = (Math.abs(v) === 6 || u === 22);
+                        const isMidVein = (v === 0 && u % 2 === 0);
+                        if (!isEdge && !isMidVein && (u % 3 !== 0 || v % 2 !== 0)) continue;
+
+                        const dist = radius * 0.27 + tu * (pLen - radius * 0.27);
+                        const side = tv * pHalfW * widthFactor;
+
+                        const lx = dist * Math.cos(baseAngle) - side * Math.sin(baseAngle);
+                        const lz = dist * Math.sin(baseAngle) + side * Math.cos(baseAngle);
+                        const ly = archY + Math.abs(tv) * 0.025;
+
+                        const rgb = isEdge
+                            ? COLORS.GOLD_EDGE
+                            : grad3(COLORS.GOLD_DEEP, COLORS.GOLD_MAIN, COLORS.GOLD_EDGE, tu);
+
+                        const p = toWorld(lx, ly, lz, Math.cos(baseAngle) * 0.4, 0.9, Math.sin(baseAngle) * 0.4);
+                        pts.push({
+                            ...p,
+                            rgb,
+                            size: isEdge ? 1.42 : 1.05,
+                            glyph: isEdge ? '•' : '·',
+                            glow: isEdge
+                        });
+                    }
+                }
+            }
+        }
+
+        /**
+         * 3. PIVOINE ROSE MAGENTA & ROSE PÂLE : Corolle ouverte et aérienne
+         */
+        function addMagentaPeony(pts, cx, cy, cz, radius, rx, rz) {
+            const toWorld = makeTransform(cx, cy, cz, rx, rz);
+
+            // Cœur doré lumineux
+            for (let i = 0; i < 48; i++) {
+                const a = i * 2.39996;
+                const r = radius * 0.18 * Math.sqrt(i / 48);
+                const p = toWorld(r * Math.cos(a), 0.10, r * Math.sin(a), 0, 1, 0);
+                pts.push({ ...p, rgb: COLORS.GOLD_EDGE, size: 1.38, glyph: '•', glow: true });
+            }
+
+            // 3 couronnes de pétales ouverts
+            for (let ring = 0; ring < 3; ring++) {
+                const count = 6 + ring * 2;
+                const rStart = radius * (0.16 + ring * 0.14);
+                const rEnd = radius * (0.58 + ring * 0.23);
+
+                for (let k = 0; k < count; k++) {
+                    const cAngle = (k / count) * Math.PI * 2 + ring * 0.55;
+                    const span = (Math.PI / count) * 1.15;
+
+                    for (let u = 0; u <= 16; u++) {
+                        const tu = u / 16;
+                        for (let v = -10; v <= 10; v++) {
+                            const tv = v / 10;
+                            const isRim = (u === 16 || Math.abs(v) === 10);
+                            if (!isRim && (u % 2 !== 0 || v % 2 !== 0)) continue;
+
+                            const r = rStart + tu * (rEnd - rStart) * Math.cos(tv * 0.45);
+                            const a = cAngle + tv * span * Math.sin(tu * Math.PI * 0.85 + 0.25);
+                            const cupY = Math.pow(tu, 1.3) * (0.26 - ring * 0.06) + Math.sin(tv * Math.PI) * 0.03;
+
+                            const lx = r * Math.cos(a);
+                            const lz = r * Math.sin(a);
+                            const rgb = isRim
+                                ? COLORS.PINK_EDGE
+                                : grad3(COLORS.PINK_DEEP, COLORS.PINK_MAIN, COLORS.PINK_EDGE, tu * 0.75 + ring * 0.12);
+
+                            const p = toWorld(lx, cupY, lz, Math.cos(a) * 0.5, 0.85, Math.sin(a) * 0.5);
+                            pts.push({
+                                ...p,
+                                rgb,
+                                size: isRim ? 1.45 : 1.05,
+                                glyph: isRim ? '•' : '·',
+                                glow: isRim
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * 4. COSMOS VIOLET LAVANDE & LILAS : 8 grands pétales espacés et cœur jaune vif
+         */
+        function addLavenderCosmos(pts, cx, cy, cz, radius, rx, rz) {
+            const toWorld = makeTransform(cx, cy, cz, rx, rz);
+
+            // Cœur jaune soleil
+            for (let i = 0; i < 62; i++) {
+                const a = i * 2.39996;
+                const r = radius * 0.22 * Math.sqrt(i / 62);
+                const p = toWorld(r * Math.cos(a), 0.06, r * Math.sin(a), 0, 1, 0);
+                pts.push({ ...p, rgb: COLORS.GOLD_MAIN, size: 1.38, glyph: '•', glow: true });
+            }
+
+            // 8 pétales larges et délicats bien séparés
+            const petals = 8;
+            for (let k = 0; k < petals; k++) {
+                const baseAngle = (k / petals) * Math.PI * 2;
+                const halfSpan = 0.26;
+
+                for (let u = 0; u <= 18; u++) {
+                    const tu = u / 18;
+                    const r = radius * (0.22 + 0.78 * tu);
+                    const notch = 1.0 - 0.08 * Math.cos(tu * Math.PI);
+
+                    for (let v = -8; v <= 8; v++) {
+                        const tv = v / 8;
+                        const isRim = (u === 18 || Math.abs(v) === 8);
+                        if (!isRim && (u % 2 !== 0 || v % 2 !== 0)) continue;
+
+                        const a = baseAngle + tv * halfSpan * Math.sin(tu * Math.PI * 0.65 + 0.35);
+                        const rActual = r * (1 - Math.abs(tv) * 0.14) * notch;
+                        const ly = Math.sin(tu * Math.PI * 0.7) * 0.10;
+
+                        const rgb = isRim
+                            ? COLORS.LAV_EDGE
+                            : grad3(COLORS.LAV_DEEP, COLORS.LAV_MAIN, COLORS.LAV_EDGE, tu);
+
+                        const p = toWorld(rActual * Math.cos(a), ly, rActual * Math.sin(a), Math.cos(a) * 0.3, 0.92, Math.sin(a) * 0.3);
+                        pts.push({
+                            ...p,
+                            rgb,
+                            size: isRim ? 1.42 : 1.05,
+                            glyph: isRim ? '•' : '·',
+                            glow: isRim
+                        });
+                    }
+                }
+            }
+        }
+
+        /**
+         * 5. TULIPE EN COUPE (Blanc nacré ou Corail lumineux) avec cœur visible
+         */
+        function addSculptedTulip(pts, cx, cy, cz, radius, rx, rz, cDeep, cMain, cEdge) {
+            const toWorld = makeTransform(cx, cy, cz, rx, rz);
+
+            // Cœur d'étamines visible quand la fleur est inclinée vers nous
+            for (let i = 0; i < 24; i++) {
+                const a = i * 2.39996;
+                const r = radius * 0.16 * Math.sqrt(i / 24);
+                const p = toWorld(r * Math.cos(a), radius * 0.45, r * Math.sin(a), 0, 1, 0);
+                pts.push({ ...p, rgb: COLORS.GOLD_MAIN, size: 1.3, glyph: '•', glow: true });
+            }
+
+            const petals = 6;
+            for (let k = 0; k < petals; k++) {
+                const baseAngle = (k / petals) * Math.PI * 2;
+                const isOuter = k % 2 === 0;
+                const rScale = isOuter ? 1.06 : 0.95;
+
+                for (let u = 0; u <= 20; u++) {
+                    const tu = u / 20;
+                    const profileR = radius * Math.sin(tu * Math.PI * 0.74 + 0.16) * rScale;
+                    const ly = tu * radius * 1.28;
+
+                    for (let v = -8; v <= 8; v++) {
+                        const tv = v / 8;
+                        const isRim = (u === 20 || Math.abs(v) === 8);
+                        if (!isRim && (u % 2 !== 0 || v % 2 !== 0)) continue;
+
+                        const a = baseAngle + tv * 0.44 * Math.sin(tu * Math.PI * 0.8 + 0.25);
+                        const rgb = isRim ? cEdge : grad3(cDeep, cMain, cEdge, tu);
+
+                        const p = toWorld(profileR * Math.cos(a), ly, profileR * Math.sin(a), Math.cos(a) * 0.8, 0.4, Math.sin(a) * 0.8);
+                        pts.push({
+                            ...p,
+                            rgb,
+                            size: isRim ? 1.45 : 1.05,
+                            glyph: isRim ? '•' : '·',
+                            glow: isRim
+                        });
+                    }
+                }
+            }
+        }
+
+        /**
+         * 6. FEUILLE DENTELÉE NERVURÉE (Contour brillant + nervure centrale)
+         */
+        function addBotanicalLeaf(pts, bx, by, bz, length, width, yaw, pitch, roll) {
+            const toWorld = makeTransform(bx, by, bz, pitch, roll);
+            const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+
+            for (let u = 0; u <= 28; u++) {
+                const tu = u / 28;
+                const serration = 1.0 + 0.08 * Math.sin(tu * Math.PI * 12);
+                const wProfile = Math.sin(Math.pow(tu, 0.65) * Math.PI) * width * serration;
+                const archY = Math.sin(tu * Math.PI * 0.68) * (length * 0.24) - Math.pow(tu, 2.1) * (length * 0.18);
+
+                for (let v = -9; v <= 9; v++) {
+                    const tv = v / 9;
+                    const isEdge = (Math.abs(v) === 9 || u === 28);
+                    const isVein = (v === 0) || (u % 5 === 0 && Math.abs(v) < 7);
+                    if (!isEdge && !isVein && (u % 2 !== 0 || v % 2 !== 0)) continue;
+
+                    const dist = tu * length;
+                    const side = tv * wProfile;
+                    const lx = dist * cosY - side * sinY;
+                    const lz = dist * sinY + side * cosY;
+                    const ly = archY + Math.abs(tv) * 0.03;
+
+                    const rgb = (isEdge || isVein)
+                        ? COLORS.LEAF_VEIN
+                        : lerpRGB(COLORS.LEAF_DARK, COLORS.LEAF_MAIN, tu);
+
+                    const p = toWorld(lx, ly, lz, -sinY * 0.3, 0.92, cosY * 0.3);
+                    pts.push({
+                        ...p,
+                        rgb,
+                        size: isEdge ? 1.38 : 1.0,
+                        glyph: isEdge ? '•' : '·',
+                        glow: isEdge
+                    });
+                }
+            }
+        }
+
+        /**
+         * 7. CONSTRUCTION COMPLÈTE DU BOUQUET AÉRÉ INCLINÉ VERS L'AVANT (9 fleurs espacées)
+         */
+        function buildAiryBouquet() {
+            const pts = [];
+
+            // Toutes les fleurs ont une inclinaison avant positive (rx) pour s'ouvrir face caméra
+            const flowerSpecs = [
+                // 1. Fleur centrale : Grand Lys impérial rouge écarlate & corail étoilé
+                { type: 'redLily',   x:  0.00, y: 1.48, z:  0.14, r: 0.66, rx:  0.42, rz:  0.00 },
+                // 2 & 3. Deux grands tournesols jaune doré & ambre largement écartés à gauche et à droite
+                { type: 'sunflower', x: -1.34, y: 1.06, z:  0.22, r: 0.56, rx:  0.38, rz:  0.48 },
+                { type: 'sunflower', x:  1.34, y: 1.06, z:  0.22, r: 0.56, rx:  0.38, rz: -0.48 },
+                // 4 & 5. Deux pivoines rose magenta et rose pâle bien ouvertes en haut
+                { type: 'peony',     x: -0.84, y: 1.86, z: -0.18, r: 0.50, rx:  0.22, rz:  0.30 },
+                { type: 'peony',     x:  0.84, y: 1.86, z: -0.18, r: 0.50, rx:  0.22, rz: -0.30 },
+                // 6 & 7. Deux cosmos violet lavande & lilas à cœur jaune vif en bas sur les flancs
+                { type: 'cosmos',    x: -0.96, y: 0.42, z:  0.60, r: 0.47, rx:  0.58, rz:  0.35 },
+                { type: 'cosmos',    x:  0.96, y: 0.42, z:  0.60, r: 0.47, rx:  0.58, rz: -0.35 },
+                // 8. Tulipe blanche nacrée en haut arrière inclinée vers l'avant
+                { type: 'tulipW',    x:  0.00, y: 2.12, z: -0.42, r: 0.43, rx:  0.20, rz:  0.00 },
+                // 9. Tulipe corail lumineuse à l'avant centre inclinée vers nous
+                { type: 'tulipC',    x:  0.00, y: 0.68, z:  0.78, r: 0.43, rx:  0.66, rz:  0.00 }
+            ];
+
+            flowerSpecs.forEach(f => {
+                if (f.type === 'redLily') {
+                    addImperialRedLily(pts, f.x, f.y, f.z, f.r, f.rx, f.rz);
+                } else if (f.type === 'sunflower') {
+                    addGoldenSunflower(pts, f.x, f.y, f.z, f.r, f.rx, f.rz);
+                } else if (f.type === 'peony') {
+                    addMagentaPeony(pts, f.x, f.y, f.z, f.r, f.rx, f.rz);
+                } else if (f.type === 'cosmos') {
+                    addLavenderCosmos(pts, f.x, f.y, f.z, f.r, f.rx, f.rz);
+                } else if (f.type === 'tulipW') {
+                    addSculptedTulip(pts, f.x, f.y, f.z, f.r, f.rx, f.rz, COLORS.WHITE_SHADOW, COLORS.WHITE_PURE, COLORS.GOLD_EDGE);
+                } else if (f.type === 'tulipC') {
+                    addSculptedTulip(pts, f.x, f.y, f.z, f.r, f.rx, f.rz, COLORS.LILY_DEEP, COLORS.CORAL_MAIN, COLORS.CORAL_EDGE);
+                }
+
+                // Tige individuelle courbe vert émeraude reliant chaque fleur jusqu'à la base
+                const steps = 95;
+                for (let s = 0; s <= steps; s++) {
+                    const t = s / steps;
+                    const gather = Math.pow(1 - t * 0.90, 1.35);
+                    const flare = t > 0.78 ? (t - 0.78) * 0.28 : 0;
+                    const px = f.x * (gather + flare);
+                    const pz = f.z * (gather + flare);
+                    const py = f.y - t * (f.y + 1.65);
+
+                    const rgb = lerpRGB(COLORS.LEAF_DARK, COLORS.LEAF_MAIN, 0.35 + 0.65 * (1 - t));
+                    pts.push({
+                        x: px, y: py, z: pz,
+                        nx: 0.3, ny: 0.2, nz: 0.9,
+                        rgb,
+                        size: 1.3,
+                        glyph: '•',
+                        glow: false
+                    });
+                }
+            });
+
+            // 8 grandes feuilles dentelées nervurées bien écartées autour du bouquet
+            const leaves = [
+                [-0.65, 0.45,  0.35, 0.88, 0.30,  2.45,  0.22,  0.24],
+                [0.65,  0.45,  0.35, 0.88, 0.30,  0.69,  0.22, -0.24],
+                [-0.95, 0.65, -0.05, 0.92, 0.32,  3.12,  0.08,  0.30],
+                [0.95,  0.65, -0.05, 0.92, 0.32,  0.02,  0.08, -0.30],
+                [-0.75, 0.85, -0.45, 0.84, 0.28, -2.40, -0.18,  0.22],
+                [0.75,  0.85, -0.45, 0.84, 0.28, -0.74, -0.18, -0.22],
+                [-0.38, 0.28,  0.62, 0.74, 0.25,  1.92,  0.40,  0.16],
+                [0.38,  0.28,  0.62, 0.74, 0.25,  1.22,  0.40, -0.16]
+            ];
+            leaves.forEach(cfg => addBotanicalLeaf(pts, ...cfg));
+
+            // Cône d'emballage fleuriste translucide rosé/blanc finement maillé en points
+            const coneRows = 68;
+            const coneCols = 132;
+            for (let iy = 0; iy <= coneRows; iy++) {
+                const t = iy / coneRows;
+                const yBase = -1.28 + t * 1.72;
+                const radius = 0.14 + Math.pow(t, 1.15) * 1.05;
+                const isTopRim = (iy === coneRows || iy === coneRows - 1);
+
+                for (let ia = 0; ia < coneCols; ia++) {
+                    const isPleatLine = (ia % 6 === 0);
+                    const isRingLine = (iy % 4 === 0 && ia % 2 === 0);
+                    if (!isTopRim && !isPleatLine && !isRingLine) continue;
+
+                    const angle = (ia / coneCols) * Math.PI * 2;
+                    const pleat = 0.055 * Math.sin(11 * angle) * t;
+                    const backCollar = Math.max(0, -Math.sin(angle)) * 0.38 * Math.pow(t, 2.0);
+                    const frontDip = Math.max(0, Math.sin(angle)) * -0.22 * Math.pow(t, 1.8);
+
+                    const px = (radius + pleat) * Math.cos(angle);
+                    const pz = (radius + pleat) * Math.sin(angle);
+                    const py = yBase + backCollar + frontDip;
+
+                    const rgb = isTopRim
+                        ? COLORS.WRAP_LIGHT
+                        : lerpRGB(COLORS.WRAP_DARK, COLORS.WRAP_MAIN, 0.35 + 0.65 * t);
+
+                    pts.push({
+                        x: px, y: py, z: pz,
+                        nx: Math.cos(angle), ny: 0.25, nz: Math.sin(angle),
+                        rgb,
+                        size: isTopRim ? 1.45 : 1.0,
+                        glyph: isTopRim ? '•' : '·',
+                        glow: isTopRim
+                    });
+                }
+            }
+
+            // Ruban satiné & nœud papillon à la taille du bouquet (y = -0.82)
+            const waistY = -0.82;
+            const waistR = 0.34;
+            for (let ia = 0; ia < 96; ia++) {
+                const a = (ia / 96) * Math.PI * 2;
+                for (let dy = -2; dy <= 2; dy++) {
+                    pts.push({
+                        x: waistR * Math.cos(a),
+                        y: waistY + dy * 0.018,
+                        z: waistR * Math.sin(a),
+                        nx: Math.cos(a), ny: 0.1, nz: Math.sin(a),
+                        rgb: COLORS.RIBBON_MAIN,
+                        size: 1.35,
+                        glyph: '•',
+                        glow: true
+                    });
+                }
+            }
+            for (const side of [-1, 1]) {
+                for (let b = 0; b <= 36; b++) {
+                    const tb = (b / 36) * Math.PI;
+                    pts.push({
+                        x: side * Math.sin(tb) * 0.34,
+                        y: waistY + Math.sin(tb * 2) * 0.09,
+                        z: waistR + 0.05 + Math.sin(tb) * 0.14,
+                        nx: side * 0.3, ny: 0.2, nz: 0.95,
+                        rgb: COLORS.PINK_EDGE,
+                        size: 1.45,
+                        glyph: '•',
+                        glow: true
+                    });
+                }
+                for (let t = 0; t <= 26; t++) {
+                    const tt = t / 26;
+                    pts.push({
+                        x: side * (0.05 + tt * 0.18),
+                        y: waistY - tt * 0.42,
+                        z: waistR + 0.07 + Math.sin(tt * 3) * 0.03,
+                        nx: 0.1, ny: 0.1, nz: 0.98,
+                        rgb: COLORS.RIBBON_MAIN,
+                        size: 1.35,
+                        glyph: '•',
+                        glow: true
+                    });
+                }
+            }
+
+            return pts;
+        }
+
+        const bouquetPoints = buildAiryBouquet();
+
+        // Fines particules scintillantes flottant autour du bouquet
+        const stardust = Array.from({ length: 60 }, (_, i) => ({
+            angle: (i / 60) * Math.PI * 2,
+            radius: 1.48 + (i % 7) * 0.14,
+            yBase: -1.10 + ((i * 11) % 28) * 0.11,
+            speed: 0.32 + (i % 4) * 0.1,
+            phase: i * 1.3,
+            rgb: i % 3 === 0 ? COLORS.GOLD_EDGE : (i % 3 === 1 ? COLORS.PINK_EDGE : COLORS.LAV_EDGE)
+        }));
+
+        // Caméra avec inclinaison prononcée vers l'avant (tiltX = 0.62 rad) pour une vue dessus-face
+        let rotationY = 0.18;
+        let tiltX = 0.62;
+        let zoomLevel = 1.0;
+        let isDragging = false;
+        let lastX = 0, lastY = 0;
+
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Buffer de tri en profondeur (Z-sort)
+        const projected = new Array(bouquetPoints.length);
+        for (let i = 0; i < bouquetPoints.length; i++) {
+            projected[i] = { sx: 0, sy: 0, z: 0, lum: 1, pt: bouquetPoints[i] };
+        }
+
+        let lastTime = performance.now();
+
+        function animate(now) {
+            const dt = Math.min(0.05, (now - lastTime) / 1000);
+            lastTime = now;
+            const elapsed = now * 0.001;
+
+            if (!isDragging) {
+                rotationY += 0.44 * dt;
+            }
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            ctx.clearRect(0, 0, width, height);
+
+            const cosY = Math.cos(rotationY), sinY = Math.sin(rotationY);
+            const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
+
+            // Calibration responsive mobile/desktop avec marge généreuse en bas pour le message
+            const isMobile = width < 640;
+            const bottomReserve = isMobile ? 96 : 74;
+            const usableH = Math.max(180, height - bottomReserve);
+            const fovScale = Math.min(width * (isMobile ? 0.44 : 0.41), usableH * 0.51) * zoomLevel;
+            const centerX = width * 0.5;
+            const centerY = usableH * (isMobile ? 0.51 : 0.53);
+
+            // Direction de lumière dessus-face
+            const lx = 0.32, ly = 0.78, lz = -0.54;
+
+            let validCount = 0;
+            for (let i = 0; i < bouquetPoints.length; i++) {
+                const p = bouquetPoints[i];
+
+                // Rotation autour de Y
+                const rx = p.x * cosY - p.z * sinY;
+                const rz = p.x * sinY + p.z * cosY;
+                const ry = p.y;
+
+                // Inclinaison vers l'avant (vue dessus-face) autour de X
+                const ry2 = ry * cosX - rz * sinX;
+                const rz2 = ry * sinX + rz * cosX;
+
+                const zCam = rz2 + 4.45;
+                if (zCam <= 0.4) continue;
+
+                const ooz = 1.0 / zCam;
+
+                // Éclairage 3D
+                const rnx = p.nx * cosY - p.nz * sinY;
+                const rnz = p.nx * sinY + p.nz * cosY;
+                const rny = p.ny * cosX - rnz * sinX;
+                const rnz2 = p.ny * sinX + rnz * cosX;
+                const diff = Math.max(0, rnx * lx + rny * ly + rnz2 * lz);
+                const depthFade = Math.max(0.56, Math.min(1.20, (6.3 - zCam) * 0.42));
+
+                const item = projected[validCount++];
+                item.sx = centerX + rx * fovScale * ooz * 2.15;
+                item.sy = centerY - ry2 * fovScale * ooz * 2.15;
+                item.z = zCam;
+                item.lum = (0.58 + 0.54 * diff) * depthFade;
+                item.pt = p;
+            }
+
+            // Tri du plus loin au plus proche
+            const visibleSlice = projected.slice(0, validCount);
+            visibleSlice.sort((a, b) => b.z - a.z);
+
+            const baseDotR = Math.max(1.05, Math.min(2.1, fovScale / 185));
+
+            // Rendu des points lumineux haute netteté
+            for (let i = 0; i < visibleSlice.length; i++) {
+                const { sx, sy, lum, pt } = visibleSlice[i];
+                const r = Math.min(255, Math.round(pt.rgb[0] * lum));
+                const g = Math.min(255, Math.round(pt.rgb[1] * lum));
+                const b = Math.min(255, Math.round(pt.rgb[2] * lum));
+
+                if (pt.glow) {
+                    ctx.fillStyle = `rgba(${r},${g},${b},0.23)`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, baseDotR * pt.size * 2.15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, baseDotR * pt.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Particules scintillantes flottantes
+            for (let i = 0; i < stardust.length; i++) {
+                const sp = stardust[i];
+                const a = sp.angle + elapsed * sp.speed + rotationY * 0.35;
+                const sx3 = Math.cos(a) * sp.radius;
+                const sz3 = Math.sin(a) * sp.radius;
+                const sy3 = sp.yBase + Math.sin(elapsed * 1.7 + sp.phase) * 0.14;
+
+                const sy2 = sy3 * cosX - sz3 * sinX;
+                const sz2 = sy3 * sinX + sz3 * cosX;
+                const zCam = sz2 + 4.45;
+                if (zCam <= 0.4) continue;
+
+                const ooz = 1.0 / zCam;
+                const px = centerX + sx3 * fovScale * ooz * 2.15;
+                const py = centerY - sy2 * fovScale * ooz * 2.15;
+                const pulse = 0.5 + 0.5 * Math.sin(elapsed * 3.0 + sp.phase);
+
+                if (pulse > 0.25) {
+                    ctx.fillStyle = `rgba(${sp.rgb[0]},${sp.rgb[1]},${sp.rgb[2]},${(pulse * 0.85).toFixed(2)})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, baseDotR * 1.25 * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        // Interactions souris / tactile
+        canvas.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.setPointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            rotationY += (e.clientX - lastX) * 0.009;
+            tiltX = Math.max(-0.35, Math.min(1.15, tiltX + (e.clientY - lastY) * 0.007));
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            canvas.releasePointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            zoomLevel = Math.max(0.65, Math.min(1.75, zoomLevel - e.deltaY * 0.001));
+        }, { passive: false });
+
+        // Modale Code Source & Téléchargement
+        const codeModal = document.getElementById('codeModal');
+        const sourceCodeDisplay = document.getElementById('sourceCodeDisplay');
+        const toastMsg = document.getElementById('toastMsg');
+
+        function showToast(text) {
+            toastMsg.textContent = text;
+            toastMsg.classList.remove('opacity-0');
+            setTimeout(() => toastMsg.classList.add('opacity-0'), 2400);
+        }
+
+        function highlightCode(raw) {
+            return raw
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/(\/\/.*)/g, '<span class="text-gray-500 italic">$1</span>')
+                .replace(/\b(function|const|let|for|if|else|return)\b/g, '<span class="text-[#ff4da6] font-semibold">$1</span>')
+                .replace(/\b(Math|COLORS)\b/g, '<span class="text-[#2ce66b]">$1</span>')
+                .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="text-[#ffd60a]">$1</span>');
+        }
+
+        document.getElementById('viewCodeBtn').addEventListener('click', () => {
+            const snippet = [
+                `// Nuage de points 3D : ${bouquetPoints.length.toLocaleString('fr-FR')} points lumineux (inclinaison vue face : ${tiltX.toFixed(2)} rad)`,
+                addImperialRedLily.toString(),
+                addGoldenSunflower.toString(),
+                addMagentaPeony.toString(),
+                addLavenderCosmos.toString(),
+                buildAiryBouquet.toString()
+            ].join('\n\n');
+            sourceCodeDisplay.innerHTML = highlightCode(snippet);
+            codeModal.classList.remove('hidden');
+            codeModal.classList.add('flex');
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            codeModal.classList.add('hidden');
+            codeModal.classList.remove('flex');
+        });
+
+        codeModal.addEventListener('click', (e) => {
+            if (e.target === codeModal) {
+                codeModal.classList.add('hidden');
+                codeModal.classList.remove('flex');
+            }
+        });
+
+        document.getElementById('copyCodeBtn').addEventListener('click', () => {
+            const temp = document.createElement('textarea');
+            temp.value = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast('Code source copié !');
+        });
+
+        document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+            const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bouquet3d_jules.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Fichier bouquet3d_jules.html téléchargé !');
+        });
+    </script>
+</body>
+</html>
